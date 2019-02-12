@@ -60,6 +60,7 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
         _cornerRadius = 5.f;
         _arrowHeight  = 5.f;
         _arrowWidth   = 10.f;
+        _arrowRadius  = 2.f;
         
         _foregroundColor = [UIColor whiteColor];
         _backgroundColor = [UIColor redColor];
@@ -274,30 +275,60 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     CGFloat arrowWidth = self.preferences.drawing.arrowWidth;
     CGFloat arrowHeight = self.preferences.drawing.arrowHeight;
     CGFloat cornerRadius = self.preferences.drawing.cornerRadius;
+    CGFloat arrowTipRadius = self.preferences.drawing.arrowRadius;
     
     CGMutablePathRef contourPath = CGPathCreateMutable();
-    CGPathMoveToPoint(contourPath, NULL, self.arrowTip.x, self.arrowTip.y);
+
+    CGFloat topBottomHorizontalBase = self.arrowTip.y +
+      (arrowPosition == ZMJArrowPosition_bottom ? -1 : 1) * arrowHeight;
+
+    CGFloat lateralVerticalBase = self.arrowTip.x +
+      (arrowPosition == ZMJArrowPosition_right ? -1 : 1) * arrowHeight;
+
     switch (arrowPosition) {
         case ZMJArrowPosition_bottom:
         case ZMJArrowPosition_top:
         case ZMJArrowPosition_any:
-            CGPathAddLineToPoint(contourPath, NULL, self.arrowTip.x - arrowWidth / 2, self.arrowTip.y + (arrowPosition == ZMJArrowPosition_bottom ? -1 : 1) * arrowHeight);
-            if (arrowPosition == ZMJArrowPosition_bottom) {
-                [self drawBubbleBottomShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
-            } else {
-                [self drawBubbleTopShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
-            }
-            CGPathAddLineToPoint(contourPath, NULL, self.arrowTip.x + arrowWidth / 2, self.arrowTip.y + (arrowPosition == ZMJArrowPosition_bottom ? -1 : 1) * arrowHeight);
-            break;
+
+          // Draw arrow with rounded tip.
+          CGPathMoveToPoint(contourPath, NULL, self.arrowTip.x - arrowWidth / 2,
+                            topBottomHorizontalBase);
+
+          CGPathAddArcToPoint(contourPath, NULL, self.arrowTip.x,
+                              self.arrowTip.y,
+                              self.arrowTip.x + arrowWidth / 2,
+                              topBottomHorizontalBase,
+                              arrowTipRadius);
+
+          CGPathAddLineToPoint(contourPath, NULL,  self.arrowTip.x + arrowWidth / 2, topBottomHorizontalBase);
+
+          // Draw body
+          if (arrowPosition == ZMJArrowPosition_bottom) {
+            [self drawBubbleBottomShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
+          } else {
+            [self drawBubbleTopShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
+          }
+        break;
         case ZMJArrowPosition_left:
         case ZMJArrowPosition_right:
-            CGPathAddLineToPoint(contourPath, NULL, self.arrowTip.x + (arrowPosition == ZMJArrowPosition_right ? -1 : 1) * arrowHeight, self.arrowTip.y - arrowWidth / 2);
+
+          // Draw arrow with rounded tip.
+          CGPathMoveToPoint(contourPath, NULL, lateralVerticalBase, self.arrowTip.y + arrowWidth / 2);
+
+
+          CGPathAddArcToPoint(contourPath, NULL, self.arrowTip.x,
+                            self.arrowTip.y,
+                            lateralVerticalBase,
+                            self.arrowTip.y - arrowWidth / 2,
+                            arrowTipRadius);
+
+          CGPathAddLineToPoint(contourPath, NULL, lateralVerticalBase, self.arrowTip.y - arrowWidth / 2);
+          // Draw body.
             if (arrowPosition == ZMJArrowPosition_right) {
                 [self drawBubbleRightShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
             } else {
                 [self drawBubbleLeftShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
             }
-            CGPathAddLineToPoint(contourPath, NULL, self.arrowTip.x + (arrowPosition == ZMJArrowPosition_right ? -1 : 1) * arrowHeight, self.arrowTip.y + arrowWidth / 2);
             break;
         default:
             break;

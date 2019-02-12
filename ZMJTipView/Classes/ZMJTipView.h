@@ -55,6 +55,7 @@ typedef NS_ENUM(NSInteger, ZMJArrowPosition) {
 @property (nonatomic, assign) CGFloat cornerRadius;
 @property (nonatomic, assign) CGFloat arrowHeight;
 @property (nonatomic, assign) CGFloat arrowWidth;
+@property (nonatomic, assign) CGFloat arrowRadius;
 @property (nonatomic, strong) UIColor *foregroundColor;
 @property (nonatomic, strong) UIColor *backgroundColor;
 @property (nonatomic, assign) ZMJArrowPosition arrowPosition;
