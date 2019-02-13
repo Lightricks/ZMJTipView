@@ -70,7 +70,7 @@ typedef NS_ENUM(NSInteger, ZMJArrowPosition) {
 @property (nonatomic, strong) ZMJDrawing     *drawing;
 @property (nonatomic, strong) ZMJPositioning *positioning;
 @property (nonatomic, strong) ZMJAnimating   *animating;
-@property (nonatomic, assign) BOOL hasBorder;
+@property (nonatomic, readonly) BOOL hasBorder;
 @property (nonatomic, assign) BOOL shouldSelectDismiss; //default is 'YES'
 @end
 

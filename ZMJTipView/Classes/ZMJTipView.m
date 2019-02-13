@@ -76,6 +76,7 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
 @end
 
 @implementation ZMJPreferences
+
 - (instancetype)init
 {
     self = [super init];
@@ -98,12 +99,13 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
 @property (nonatomic, weak  ) NSObject<ZMJTipViewDelegate> *delegate;
 @property (nonatomic, assign) CGPoint                arrowTip;
 @property (nonatomic, strong) ZMJPreferences        *preferences;
-@property (nonatomic, assign) CGSize textSize;
-@property (nonatomic, assign) CGSize contentSize;
+@property (nonatomic, readonly) CGSize textSize;
+@property (nonatomic, readonly) CGSize contentSize;
 @end
 
 @implementation ZMJTipView
 @dynamic globalPreferences;
+
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
@@ -113,7 +115,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     return self;
 }
 
-- (instancetype)initWithText:(NSString *)text preferences:(ZMJPreferences *)preferences delegate:(id<ZMJTipViewDelegate>)delegate {
+- (instancetype)initWithText:(NSString *)text preferences:(ZMJPreferences *)preferences
+                    delegate:(id<ZMJTipViewDelegate>)delegate {
     self = [self initWithFrame:CGRectZero];
     if (self) {
         _text = text;
@@ -121,10 +124,14 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
         _preferences = preferences;
         _delegate = delegate;
         
-        [self addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
+        [self addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew
+                  context:nil];
         
         self.backgroundColor = [UIColor clearColor];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleRotation) name:UIDeviceOrientationDidChangeNotification object:nil];
+        [[NSNotificationCenter defaultCenter]
+            addObserver:self selector:@selector(handleRotation)
+            name:UIDeviceOrientationDidChangeNotification
+            object:nil];
     }
     return self;
 }
@@ -151,22 +158,26 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
 }
 
 // MARK: Private method
-- (CGRect)computeFrameWithArrowPosition:(ZMJArrowPosition)postion refViewFrame:(CGRect)refViewFrame superviewFrame:(CGRect)superviewFrame {
+- (CGRect)computeFrameWithArrowPosition:(ZMJArrowPosition)postion refViewFrame:(CGRect)refViewFrame
+                         superviewFrame:(CGRect)superviewFrame {
     CGFloat xOrigin = 0;
     CGFloat yOrigin = 0;
     switch (postion) {
         case ZMJArrowPosition_top:
         case ZMJArrowPosition_any:
-            xOrigin = CGRectGetMaxX(refViewFrame) - refViewFrame.size.width / 2 - self.contentSize.width / 2;
+            xOrigin = CGRectGetMaxX(refViewFrame) -
+                refViewFrame.size.width / 2 - self.contentSize.width / 2;
             yOrigin = CGRectGetMaxY(refViewFrame);
             break;
         case ZMJArrowPosition_bottom:
-            xOrigin = CGRectGetMaxX(refViewFrame) - refViewFrame.size.width / 2 - self.contentSize.width / 2;
+            xOrigin = CGRectGetMaxX(refViewFrame) -
+                refViewFrame.size.width / 2 - self.contentSize.width / 2;
             yOrigin = CGRectGetMinY(refViewFrame) - self.contentSize.height;
             break;
         case ZMJArrowPosition_right:
             xOrigin = CGRectGetMinX(refViewFrame) - self.contentSize.width;
-            yOrigin = CGRectGetMaxY(refViewFrame) - refViewFrame.size.height / 2 - self.contentSize.height / 2;
+            yOrigin = CGRectGetMaxY(refViewFrame) -
+                refViewFrame.size.height / 2 - self.contentSize.height / 2;
             break;
         case ZMJArrowPosition_left:
             xOrigin = CGRectGetMaxY(refViewFrame);
@@ -196,14 +207,16 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     }
 }
 
-- (BOOL)isFrameValid:(CGRect)frame forRefViewFrame:(CGRect)refViewFrame withinSuperviewFrame:(CGRect)superviewFrame {
+- (BOOL)isFrameValid:(CGRect)frame forRefViewFrame:(CGRect)refViewFrame
+                              withinSuperviewFrame:(__unused CGRect)superviewFrame {
     return !CGRectIntersectsRect(frame, refViewFrame);
 }
 
 - (void)arrangeWithinSuperview:(UIView *)superview {
     ZMJArrowPosition position = self.preferences.drawing.arrowPosition;
     
-    CGRect refViewFrame = [self.presentingView convertRect:self.presentingView.bounds toView:superview];
+    CGRect refViewFrame = [self.presentingView
+                              convertRect:self.presentingView.bounds toView:superview];
     
     CGRect superviewFrame;
     if ([superview isKindOfClass:[UIScrollView class]]) {
@@ -216,17 +229,29 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
         superviewFrame = superview.frame;
     }
     
-    CGRect frame = [self computeFrameWithArrowPosition:position refViewFrame:refViewFrame superviewFrame:superviewFrame];
-    if (![self isFrameValid:frame forRefViewFrame:refViewFrame withinSuperviewFrame:superviewFrame]) {
+    CGRect frame = [self computeFrameWithArrowPosition:position
+                                          refViewFrame:refViewFrame
+                                        superviewFrame:superviewFrame];
+
+    if (![self isFrameValid:frame forRefViewFrame:refViewFrame
+                             withinSuperviewFrame:superviewFrame]) {
         for (int idx = 0; idx < 4; idx++) {
             ZMJArrowPosition value = ZMJArrowPositionAllValues[idx];
             if (value == position) {
                 continue;
             }
-            CGRect newFrame = [self computeFrameWithArrowPosition:value refViewFrame:refViewFrame superviewFrame:superviewFrame];
-            if ([self isFrameValid:newFrame forRefViewFrame:refViewFrame withinSuperviewFrame:superviewFrame]) {
+            CGRect newFrame = [self computeFrameWithArrowPosition:value
+                                                     refViewFrame:refViewFrame
+                                                   superviewFrame:superviewFrame];
+
+            if ([self isFrameValid:newFrame forRefViewFrame:refViewFrame
+                                       withinSuperviewFrame:superviewFrame]) {
+
                 if (position != ZMJArrowPosition_any) {
-                    NSLog(@"[ZMJTipView - Info] The arrow position you chose <%ld> could not be applied. Instead, position <%ld> has been applied! Please specify position <%ld> if you want ZMJTipView to choose a position for you.", (long)position, (long)value, (long)ZMJArrowPosition_any);
+                    NSLog(@"[ZMJTipView - Info] The arrow position you chose <%ld> could not be "
+                          "applied. Instead, position <%ld> has been applied! Please specify"
+                          "position <%ld> if you want ZMJTipView to choose a position for you.",
+                          (long)position, (long)value, (long)ZMJArrowPosition_any);
                 }
                 frame = newFrame;
                 position = value;
@@ -244,18 +269,28 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
             if (frame.size.width < refViewFrame.size.width) {
                 arrowTipXOrigin = self.contentSize.width / 2;
             } else {
-                arrowTipXOrigin = fabs(frame.origin.x - refViewFrame.origin.x) + refViewFrame.size.width / 2;
+                arrowTipXOrigin = fabs(frame.origin.x - refViewFrame.origin.x) +
+                                      refViewFrame.size.width / 2;
             }
-            self.arrowTip = CGPointMake(arrowTipXOrigin, position == ZMJArrowPosition_bottom ? self.contentSize.height - self.preferences.positioning.bubbleVInset : self.preferences.positioning.bubbleVInset);
+            self.arrowTip =
+                  CGPointMake(arrowTipXOrigin,
+                              position == ZMJArrowPosition_bottom ?
+                              self.contentSize.height - self.preferences.positioning.bubbleVInset :
+                              self.preferences.positioning.bubbleVInset);
             break;
         case ZMJArrowPosition_right:
         case ZMJArrowPosition_left:
             if (frame.size.height < refViewFrame.size.height) {
                 arrowTipXOrigin = self.contentSize.height / 2;
             } else {
-                arrowTipXOrigin = fabs(frame.origin.y - refViewFrame.origin.y) + refViewFrame.size.height / 2;
+                arrowTipXOrigin = fabs(frame.origin.y - refViewFrame.origin.y) +
+                                      refViewFrame.size.height / 2;
             }
-            self.arrowTip = CGPointMake(self.preferences.drawing.arrowPosition == ZMJArrowPosition_left ? self.preferences.positioning.bubbleVInset : self.contentSize.width - self.preferences.positioning.bubbleVInset, arrowTipXOrigin);
+            self.arrowTip =
+                CGPointMake(self.preferences.drawing.arrowPosition == ZMJArrowPosition_left ?
+                            self.preferences.positioning.bubbleVInset :
+                            self.contentSize.width - self.preferences.positioning.bubbleVInset,
+                            arrowTipXOrigin);
             break;
         default:
             break;
@@ -264,14 +299,16 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
 }
 
 - (void)handleTap {
-    ![self.delegate respondsToSelector:@selector(tipViewDidSelected:)] ?: [self.delegate tipViewDidSelected:self];
+    ![self.delegate respondsToSelector:@selector(tipViewDidSelected:)] ?:
+          [self.delegate tipViewDidSelected:self];
     if (self.preferences.shouldSelectDismiss) {
         [self dismissWithCompletion:nil];
     }
 }
 
 // MARK: Drawing
-- (void)drawBubble:(CGRect)bubbleFrame arrowPosition:(ZMJArrowPosition)arrowPosition context:(CGContextRef)context {
+- (void)drawBubble:(CGRect)bubbleFrame arrowPosition:(ZMJArrowPosition)arrowPosition
+           context:(CGContextRef)context {
     CGFloat arrowWidth = self.preferences.drawing.arrowWidth;
     CGFloat arrowHeight = self.preferences.drawing.arrowHeight;
     CGFloat cornerRadius = self.preferences.drawing.cornerRadius;
@@ -300,7 +337,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
                               topBottomHorizontalBase,
                               arrowTipRadius);
 
-          CGPathAddLineToPoint(contourPath, NULL,  self.arrowTip.x + arrowWidth / 2, topBottomHorizontalBase);
+          CGPathAddLineToPoint(contourPath, NULL,  self.arrowTip.x + arrowWidth / 2,
+                               topBottomHorizontalBase);
 
           // Draw body
           if (arrowPosition == ZMJArrowPosition_bottom) {
@@ -313,7 +351,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
         case ZMJArrowPosition_right:
 
           // Draw arrow with rounded tip.
-          CGPathMoveToPoint(contourPath, NULL, lateralVerticalBase, self.arrowTip.y + arrowWidth / 2);
+          CGPathMoveToPoint(contourPath, NULL, lateralVerticalBase,
+                            self.arrowTip.y + arrowWidth / 2);
 
 
           CGPathAddArcToPoint(contourPath, NULL, self.arrowTip.x,
@@ -322,7 +361,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
                             self.arrowTip.y - arrowWidth / 2,
                             arrowTipRadius);
 
-          CGPathAddLineToPoint(contourPath, NULL, lateralVerticalBase, self.arrowTip.y - arrowWidth / 2);
+          CGPathAddLineToPoint(contourPath, NULL, lateralVerticalBase,
+                               self.arrowTip.y - arrowWidth / 2);
           // Draw body.
             if (arrowPosition == ZMJArrowPosition_right) {
                 [self drawBubbleRightShape:bubbleFrame cornerRadius:cornerRadius path:contourPath];
@@ -334,7 +374,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
             break;
     }
     CGPathCloseSubpath(contourPath);
-    CGContextSetShadowWithColor(context, CGSizeZero, 10, self.preferences.drawing.shadowColor.CGColor);
+    CGContextSetShadowWithColor(context, CGSizeZero, 10,
+                                self.preferences.drawing.shadowColor.CGColor);
     CGContextAddPath(context, contourPath);
     CGContextClosePath(context);
     
@@ -344,32 +385,56 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     }
 }
 
-- (void)drawBubbleBottomShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius path:(CGMutablePathRef)path {
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), frame.origin.x, frame.origin.y, cornerRadius);
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, CGRectGetMaxX(frame), frame.origin.y, cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, CGRectGetMaxX(frame), CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame), frame.origin.x, CGRectGetMaxY(frame), cornerRadius);
+- (void)drawBubbleBottomShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius
+                         path:(CGMutablePathRef)path {
+
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), frame.origin.x,
+                        frame.origin.y, cornerRadius);
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, CGRectGetMaxX(frame),
+                        frame.origin.y, cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, CGRectGetMaxX(frame),
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame), frame.origin.x,
+                        CGRectGetMaxY(frame), cornerRadius);
 }
 
-- (void)drawBubbleTopShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius path:(CGMutablePathRef)path {
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, frame.origin.x, CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), CGRectGetMaxX(frame), CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame), CGRectGetMaxX(frame), frame.origin.y, cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, frame.origin.x, frame.origin.y, cornerRadius);
+- (void)drawBubbleTopShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius
+                      path:(CGMutablePathRef)path {
+
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, frame.origin.x,
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), CGRectGetMaxX(frame),
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame),
+                        CGRectGetMaxX(frame), frame.origin.y, cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, frame.origin.x,
+                        frame.origin.y, cornerRadius);
 }
 
-- (void)drawBubbleRightShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius path:(CGMutablePathRef)path {
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, frame.origin.x, frame.origin.y, cornerRadius);
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, frame.origin.x, CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), CGRectGetMaxX(frame), CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame), CGRectGetMaxX(frame), frame.size.height, cornerRadius);
+- (void)drawBubbleRightShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius
+                        path:(CGMutablePathRef)path {
+
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, frame.origin.x,
+                        frame.origin.y, cornerRadius);
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, frame.origin.x,
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), CGRectGetMaxX(frame),
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame),
+                        CGRectGetMaxX(frame), frame.size.height, cornerRadius);
 }
 
-- (void)drawBubbleLeftShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius path:(CGMutablePathRef)path {
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, CGRectGetMaxX(frame), frame.origin.y, cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, CGRectGetMaxX(frame), CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame), frame.origin.x, CGRectGetMaxY(frame), cornerRadius);
-    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), frame.origin.x, frame.origin.y, cornerRadius);
+- (void)drawBubbleLeftShape:(CGRect)frame cornerRadius:(CGFloat)cornerRadius
+                       path:(CGMutablePathRef)path {
+
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, frame.origin.y, CGRectGetMaxX(frame),
+                        frame.origin.y, cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), frame.origin.y, CGRectGetMaxX(frame),
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, CGRectGetMaxX(frame), CGRectGetMaxY(frame), frame.origin.x,
+                        CGRectGetMaxY(frame), cornerRadius);
+    CGPathAddArcToPoint(path, NULL, frame.origin.x, CGRectGetMaxY(frame), frame.origin.x,
+                        frame.origin.y, cornerRadius);
 }
 
 - (void)paintBubble:(CGContextRef)context {
@@ -384,18 +449,22 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     CGContextStrokePath(context);
 }
 
-- (void)drawText:(CGRect)bubbleFrame context:(CGContextRef)context {
+- (void)drawText:(CGRect)bubbleFrame context:(__unused CGContextRef)context {
     NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
     paragraphStyle.alignment = self.preferences.drawing.textAlignment;
     paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
     
-    CGRect textRect = CGRectMake(bubbleFrame.origin.x + (bubbleFrame.size.width - self.textSize.width) / 2,
-                                 bubbleFrame.origin.y + (bubbleFrame.size.height - self.textSize.height) / 2,
+    CGRect textRect = CGRectMake(bubbleFrame.origin.x +
+                                    (bubbleFrame.size.width - self.textSize.width) / 2,
+                                 bubbleFrame.origin.y +
+                                    (bubbleFrame.size.height - self.textSize.height) / 2,
                                  self.textSize.width,
                                  self.textSize.height);
-    [self.text drawInRect:textRect withAttributes:@{NSFontAttributeName: self.preferences.drawing.font,
-                                                    NSForegroundColorAttributeName: self.preferences.drawing.foregroundColor,
-                                                    NSParagraphStyleAttributeName: paragraphStyle}];
+    [self.text drawInRect:textRect
+           withAttributes:@{NSFontAttributeName: self.preferences.drawing.font,
+                            NSForegroundColorAttributeName:self.preferences.drawing.foregroundColor,
+                            NSParagraphStyleAttributeName: paragraphStyle}
+     ];
 }
 
 - (void)layoutSubviews {
@@ -410,12 +479,13 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     }
 }
 
-- (void)drawRect:(CGRect)rect {
+- (void)drawRect:(__unused CGRect)rect {
     CGRect bubbleFrame = [self _computeBubbleFrameAccordingPosition];
     
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSaveGState(context);
-    [self drawBubble:bubbleFrame arrowPosition:self.preferences.drawing.arrowPosition context:context];
+    [self drawBubble:bubbleFrame arrowPosition:self.preferences.drawing.arrowPosition
+             context:context];
     CGContextRestoreGState(context);
     
     if (!self.fakeView) {
@@ -437,17 +507,25 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
         case ZMJArrowPosition_top:
         case ZMJArrowPosition_any:
             bubbleWidth = self.contentSize.width - 2 * self.preferences.positioning.bubbleHInset;
-            bubbleHeight= self.contentSize.height - 2 * self.preferences.positioning.bubbleVInset - self.preferences.drawing.arrowHeight;
+            bubbleHeight = self.contentSize.height - 2 * self.preferences.positioning.bubbleVInset -
+                              self.preferences.drawing.arrowHeight;
             
             bubbleXOrigin = self.preferences.positioning.bubbleHInset;
-            bubbleYOrigin = arrowPosition == ZMJArrowPosition_bottom ? self.preferences.positioning.bubbleVInset : self.preferences.positioning.bubbleVInset + self.preferences.drawing.arrowHeight;
+            bubbleYOrigin = arrowPosition == ZMJArrowPosition_bottom ?
+                                self.preferences.positioning.bubbleVInset :
+                                  self.preferences.positioning.bubbleVInset +
+                                    self.preferences.drawing.arrowHeight;
             break;
         case ZMJArrowPosition_left:
         case ZMJArrowPosition_right:
-            bubbleWidth = self.contentSize.width - 2 * self.preferences.positioning.bubbleHInset - self.preferences.drawing.arrowHeight;
+            bubbleWidth = self.contentSize.width - 2 * self.preferences.positioning.bubbleHInset -
+                            self.preferences.drawing.arrowHeight;
             bubbleHeight = self.contentSize.height - 2 * self.preferences.positioning.bubbleVInset;
             
-            bubbleXOrigin = arrowPosition == ZMJArrowPosition_right ? self.preferences.positioning.bubbleHInset : self.preferences.positioning.bubbleHInset + self.preferences.drawing.arrowHeight;
+            bubbleXOrigin = arrowPosition == ZMJArrowPosition_right ?
+                              self.preferences.positioning.bubbleHInset :
+                                self.preferences.positioning.bubbleHInset +
+                                  self.preferences.drawing.arrowHeight;
             bubbleYOrigin = self.preferences.positioning.bubbleVInset;
             break;
         default:
@@ -458,7 +536,9 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
 }
 
 // MARK: Variables
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(__unused id)object
+                        change:(NSDictionary<NSKeyValueChangeKey,id> *)change
+                       context:(__unused void *)context {
     UIColor *backgroundColor = (UIColor *)[change objectForKey:NSKeyValueChangeNewKey];
     if ([backgroundColor isEqual:[UIColor clearColor]]) {
         return;
@@ -466,7 +546,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
     self.preferences.drawing.backgroundColor = backgroundColor;
     [self removeObserver:self forKeyPath:@"backgroundColor"];
     [self setValue:[UIColor clearColor] forKey:keyPath];
-    [self addObserver:self forKeyPath:@"backgroundColor" options:NSKeyValueObservingOptionNew context:nil];
+    [self addObserver:self forKeyPath:@"backgroundColor"
+              options:NSKeyValueObservingOptionNew context:nil];
 }
 
 - (NSString *)description {
@@ -474,7 +555,8 @@ __unused static ZMJArrowPosition ZMJArrowPositionAllValues[4] = {
 }
 
 - (NSString *)debugDescription {
-    return [NSString stringWithFormat:@"<<%@ with text: '%@'>>", NSStringFromClass([self class]), self.text];
+    return [NSString stringWithFormat:@"<<%@ with text: '%@'>>", NSStringFromClass([self class]),
+            self.text];
 }
 
 static ZMJPreferences *_globalPreferences;
@@ -500,10 +582,13 @@ static ZMJPreferences *_globalPreferences;
 - (CGSize)textSize {
     NSDictionary *attributes = @{NSFontAttributeName: self.preferences.drawing.font};
     
-    CGSize textSize = [self.text boundingRectWithSize:CGSizeMake(self.preferences.positioning.maxWidth, CGFLOAT_MAX)
-                                              options:NSStringDrawingUsesLineFragmentOrigin
-                                           attributes:attributes
-                                              context:nil].size;
+    CGSize textSize =
+        [self.text boundingRectWithSize:CGSizeMake(self.preferences.positioning.maxWidth,
+                                                   CGFLOAT_MAX)
+                                options:NSStringDrawingUsesLineFragmentOrigin
+                             attributes:attributes
+                                context:nil].size;
+
     textSize.width = ceilf(textSize.width);
     textSize.height = ceilf(textSize.height);
     
@@ -515,17 +600,25 @@ static ZMJPreferences *_globalPreferences;
 
 - (CGSize)contentSize {
     if (self.fakeView) {
-        return CGSizeMake([self.fakeView intrinsicContentSize].width + self.preferences.positioning.bubbleHInset * 2,
-                          [self.fakeView intrinsicContentSize].height + self.preferences.positioning.bubbleVInset * 2 + self.preferences.drawing.arrowHeight);
+        return CGSizeMake([self.fakeView intrinsicContentSize].width +
+                            self.preferences.positioning.bubbleHInset * 2,
+                          [self.fakeView intrinsicContentSize].height +
+                            self.preferences.positioning.bubbleVInset * 2 +
+                              self.preferences.drawing.arrowHeight);
     }
     
-    CGSize contentSize = CGSizeMake(self.textSize.width + self.preferences.positioning.textHInset * 2 + self.preferences.positioning.bubbleHInset * 2,
-                                    self.textSize.height + self.preferences.positioning.textVInset * 2 + self.preferences.positioning.bubbleVInset * 2 + self.preferences.drawing.arrowHeight);
+    CGSize contentSize = CGSizeMake(self.textSize.width +
+                                      self.preferences.positioning.textHInset * 2 +
+                                        self.preferences.positioning.bubbleHInset * 2,
+                                    self.textSize.height +
+                                      self.preferences.positioning.textVInset * 2 +
+                                        self.preferences.positioning.bubbleVInset * 2 +
+                                          self.preferences.drawing.arrowHeight);
     return contentSize;
 }
 
 // MARK: - UIGestureRecognizerDelegate implementation
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+- (BOOL)gestureRecognizerShouldBegin:(__unused UIGestureRecognizer *)gestureRecognizer {
     return self.preferences.animating.dismissOnTap;
 }
 @end
@@ -540,7 +633,8 @@ static ZMJPreferences *_globalPreferences;
 {
     if (item.view) {
         preferences = preferences ?: ZMJTipView.globalPreferences;
-        [self showAnimated:animated forView:item.view withinSuperview:superview text:text preferences:preferences delegate:delegate];
+        [self showAnimated:animated forView:item.view withinSuperview:superview text:text
+               preferences:preferences delegate:delegate];
     }
 }
 
@@ -552,7 +646,8 @@ static ZMJPreferences *_globalPreferences;
             delegate:(id<ZMJTipViewDelegate>)delegate
 {
     preferences = preferences ?: ZMJTipView.globalPreferences;
-    ZMJTipView *tipview = [[ZMJTipView alloc] initWithText:text preferences:preferences delegate:delegate];
+    ZMJTipView *tipview = [[ZMJTipView alloc] initWithText:text preferences:preferences
+                                                  delegate:delegate];
     [tipview showAnimated:animated forView:view withinSuperview:superview];
 }
 
@@ -569,7 +664,11 @@ static ZMJPreferences *_globalPreferences;
              forView:(UIView *)view
      withinSuperview:(UIView *)superview
 {
-    NSAssert2(superview == nil || [view hashSuperview:superview], @"The supplied superview <\%@)> is not a direct nor an indirect superview of the supplied reference view <%@)>. The superview passed to this method should be a direct or an indirect superview of the reference view. To display the tooltip within the main window, ignore the superview parameter.", superview, view);
+    NSAssert2(superview == nil || [view hashSuperview:superview],
+              @"The supplied superview <\%@)> is not a direct nor an indirect superview of the"
+              " supplied reference view <%@)>. The superview passed to this method should be a "
+              "direct or an indirect superview of the reference view. To display the tooltip "
+              "within the main window, ignore the superview parameter.", superview, view);
     
     if (!superview) {
         superview = [UIApplication sharedApplication].windows.firstObject;
@@ -587,7 +686,9 @@ static ZMJPreferences *_globalPreferences;
     self.transform = initialTransform;
     self.alpha = initialAlpha;
     
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
+                                    initWithTarget:self
+                                            action:@selector(handleTap)];
     tap.delegate = self;
     [self addGestureRecognizer:tap];
     
@@ -625,7 +726,7 @@ static ZMJPreferences *_globalPreferences;
                         options:UIViewAnimationOptionCurveEaseInOut animations:^{
                             weak_self.transform = self.preferences.animating.dismissTransform;
                             weak_self.alpha = self.preferences.animating.dismissFinalAlpha;
-                        } completion:^(BOOL finished) {
+                        } completion:^(__unused BOOL finished) {
                             [weak_self.delegate tipViewDidDimiss:weak_self];
                             [weak_self removeFromSuperview];
                             weak_self.transform = CGAffineTransformIdentity;
@@ -641,7 +742,8 @@ static ZMJPreferences *_globalPreferences;
     if ([self isKindOfClass:[UIBarButtonItem class]] && [(UIBarButtonItem *)self customView]) {
         return [(UIBarButtonItem *)self customView];
     }
-    return [[self valueForKey:@"view"] isKindOfClass:[UIView class]] ? [self valueForKey:@"view"] : nil;
+    return [[self valueForKey:@"view"] isKindOfClass:[UIView class]] ?
+                [self valueForKey:@"view"] : nil;
 }
 @end
 
