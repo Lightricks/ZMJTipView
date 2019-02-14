@@ -55,6 +55,7 @@ typedef NS_ENUM(NSInteger, ZMJArrowPosition) {
 @property (nonatomic, assign) CGFloat cornerRadius;
 @property (nonatomic, assign) CGFloat arrowHeight;
 @property (nonatomic, assign) CGFloat arrowWidth;
+@property (nonatomic, assign) CGFloat arrowRadius;
 @property (nonatomic, strong) UIColor *foregroundColor;
 @property (nonatomic, strong) UIColor *backgroundColor;
 @property (nonatomic, assign) ZMJArrowPosition arrowPosition;
@@ -69,7 +70,7 @@ typedef NS_ENUM(NSInteger, ZMJArrowPosition) {
 @property (nonatomic, strong) ZMJDrawing     *drawing;
 @property (nonatomic, strong) ZMJPositioning *positioning;
 @property (nonatomic, strong) ZMJAnimating   *animating;
-@property (nonatomic, assign) BOOL hasBorder;
+@property (nonatomic, readonly) BOOL hasBorder;
 @property (nonatomic, assign) BOOL shouldSelectDismiss; //default is 'YES'
 @end
 
